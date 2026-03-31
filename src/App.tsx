@@ -5,6 +5,35 @@ import { Sprout, User, Check, Printer, ArrowRight, ArrowLeft, AlertCircle, Shopp
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, onSnapshot, doc, writeBatch, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
+// --- DEFINISI TIPE DATA TYPESCRIPT ---
+interface UserData {
+  nik: string;
+  nama: string;
+  fotoKtp: string | null;
+}
+
+interface Bibit {
+  id: number;
+  firebaseId?: string;
+  nama: string;
+  kategori: string;
+  stok: number;
+  max: number;
+  img: string;
+}
+
+interface Transaksi {
+  id?: string;
+  kode: string;
+  waktu: string;
+  tanggal: string;
+  timestamp?: any;
+  nama: string;
+  nik: string;
+  total: number;
+  detail: Record<string, number>;
+}
+
 // --- 2. KONFIGURASI FIREBASE ANDA ---
 const firebaseConfig = {
   apiKey: "AIzaSyBSAyi5T5YdZsyeCBV0x5h06TM8T9o9sXU",
@@ -16,8 +45,8 @@ const firebaseConfig = {
 };
 
 // Inisialisasi Firebase
-let app;
-let db;
+let app: any;
+let db: any;
 let isFirebaseConfigured = false;
 
 try {
@@ -29,7 +58,7 @@ try {
 }
 
 // --- DATA BIBIT AWAL (Untuk Inisialisasi Database oleh Admin) ---
-const INITIAL_BIBIT_DATA = [
+const INITIAL_BIBIT_DATA: Bibit[] = [
   { id: 1, nama: 'Sengon (Solomon)', kategori: 'Kayu-kayuan', stok: 1500, max: 25, img: '🌲' },
   { id: 2, nama: 'Matoa (Pometia pinnata)', kategori: 'Buah Lokal', stok: 80, max: 5, img: '🍈' },
   { id: 3, nama: 'Trembesi', kategori: 'Peneduh', stok: 200, max: 10, img: '🌳' },
@@ -41,42 +70,42 @@ const INITIAL_BIBIT_DATA = [
 ];
 
 export default function App() {
-  const [step, setStep] = useState('welcome'); 
-  const [userData, setUserData] = useState({ nik: '', nama: '', fotoKtp: null });
-  const [cart, setCart] = useState({});
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [ticketCode, setTicketCode] = useState('');
+  const [step, setStep] = useState<string>('welcome'); 
+  const [userData, setUserData] = useState<UserData>({ nik: '', nama: '', fotoKtp: null });
+  const [cart, setCart] = useState<Record<number, number>>({});
+  const [isPrinting, setIsPrinting] = useState<boolean>(false);
+  const [ticketCode, setTicketCode] = useState<string>('');
   
-  // State untuk Data Firebase
-  const [bibitData, setBibitData] = useState([]);
-  const [riwayatTransaksi, setRiwayatTransaksi] = useState([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  // State untuk Data Firebase beserta tipe datanya
+  const [bibitData, setBibitData] = useState<Bibit[]>([]);
+  const [riwayatTransaksi, setRiwayatTransaksi] = useState<Transaksi[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
 
   // --- URL LOGO BPDAS ---
   const LOGO_BPDAS_URL = ""; 
 
   // --- 3. AMBIL DATA DARI FIREBASE SECARA REAL-TIME ---
   useEffect(() => {
-    if (!isFirebaseConfigured) {
+    if (!isFirebaseConfigured || !db) {
       setIsLoadingData(false);
       return;
     }
 
     // Listener koleksi 'bibit'
-    const unsubBibit = onSnapshot(collection(db, 'bibit'), (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ firebaseId: doc.id, ...doc.data() }));
-      data.sort((a, b) => a.id - b.id);
+    const unsubBibit = onSnapshot(collection(db, 'bibit'), (snapshot: any) => {
+      const data = snapshot.docs.map((doc: any) => ({ firebaseId: doc.id, ...doc.data() } as Bibit));
+      data.sort((a: Bibit, b: Bibit) => a.id - b.id);
       setBibitData(data);
       setIsLoadingData(false);
-    }, (error) => {
+    }, (error: any) => {
       console.error("Gagal mengambil data bibit:", error);
       setIsLoadingData(false);
     });
 
     // Listener koleksi 'transaksi' (diurutkan terbaru)
     const qTrx = query(collection(db, 'transaksi'), orderBy('timestamp', 'desc'));
-    const unsubTrx = onSnapshot(qTrx, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const unsubTrx = onSnapshot(qTrx, (snapshot: any) => {
+      const data = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as Transaksi));
       setRiwayatTransaksi(data);
     });
 
@@ -95,7 +124,7 @@ export default function App() {
   };
 
   // --- COMPONENT: LOGO BPDAS PLACEHOLDER ---
-  const BpdasLogo = ({ size = "large" }) => {
+  const BpdasLogo = ({ size = "large" }: { size?: "large" | "small" }) => {
     if (LOGO_BPDAS_URL) {
       return (
         <img 
@@ -165,11 +194,11 @@ export default function App() {
 
   // --- COMPONENT: INPUT NIK ---
   const InputNikScreen = () => {
-    const [input, setInput] = useState(userData.nik || '');
-    const [error, setError] = useState('');
-    const [showCamera, setShowCamera] = useState(false);
-    const [capturedImage, setCapturedImage] = useState(userData.fotoKtp || null);
-    const [isScanning, setIsScanning] = useState(false);
+    const [input, setInput] = useState<string>(userData.nik || '');
+    const [error, setError] = useState<string>('');
+    const [showCamera, setShowCamera] = useState<boolean>(false);
+    const [capturedImage, setCapturedImage] = useState<string | null>(userData.fotoKtp || null);
+    const [isScanning, setIsScanning] = useState<boolean>(false);
 
     const handleLogin = () => {
       if (input.length < 16) {
@@ -282,7 +311,7 @@ export default function App() {
 
             <div className="grid grid-cols-3 gap-4 mb-6 flex-shrink">
               {[1,2,3,4,5,6,7,8,9].map(num => (
-                <button key={num} onClick={() => setInput(prev => prev.length < 16 ? prev + num : prev)} className="bg-gray-50 py-4 rounded-2xl text-4xl font-bold text-gray-700 hover:bg-green-100 hover:text-green-700 hover:shadow-md transition active:scale-95">
+                <button key={num} onClick={() => setInput(prev => prev.length < 16 ? prev + num.toString() : prev)} className="bg-gray-50 py-4 rounded-2xl text-4xl font-bold text-gray-700 hover:bg-green-100 hover:text-green-700 hover:shadow-md transition active:scale-95">
                   {num}
                 </button>
               ))}
@@ -310,14 +339,14 @@ export default function App() {
 
   // --- COMPONENT: CATALOG ---
   const CatalogScreen = () => {
-    const addToCart = (bibit) => {
+    const addToCart = (bibit: Bibit) => {
       const currentQty = cart[bibit.id] || 0;
       if (currentQty < bibit.max && currentQty < bibit.stok) {
         setCart({ ...cart, [bibit.id]: currentQty + 1 });
       }
     };
 
-    const removeFromCart = (bibitId) => {
+    const removeFromCart = (bibitId: number) => {
       const currentQty = cart[bibitId] || 0;
       if (currentQty > 0) {
         const newCart = { ...cart };
@@ -460,7 +489,7 @@ export default function App() {
         setTicketCode(newCode);
 
         // Jika Firebase sudah dikonfigurasi, simpan ke database
-        if (isFirebaseConfigured) {
+        if (isFirebaseConfigured && db) {
             const batch = writeBatch(db);
 
             Object.entries(cart).forEach(([bibitId, qty]) => {
@@ -472,13 +501,14 @@ export default function App() {
             });
 
             const trxRef = doc(collection(db, 'transaksi'));
-            const detailPesanan = {};
+            const detailPesanan: Record<string, number> = {};
+            
             Object.entries(cart).forEach(([id, qty]) => {
-                const namaTanaman = bibitData.find(b => b.id === parseInt(id))?.nama || id;
+                const namaTanaman = bibitData.find(b => b.id === parseInt(id))?.nama || id.toString();
                 detailPesanan[namaTanaman] = qty;
             });
 
-            batch.set(trxRef, {
+            const newTrx: Transaksi = {
                kode: newCode,
                waktu: new Date().toLocaleTimeString('id-ID'),
                tanggal: new Date().toLocaleDateString('id-ID'),
@@ -487,7 +517,9 @@ export default function App() {
                nik: userData.nik,
                total: totalItems,
                detail: detailPesanan
-            });
+            };
+
+            batch.set(trxRef, newTrx);
 
             await batch.commit();
         } else {
@@ -619,8 +651,8 @@ export default function App() {
 
   // --- COMPONENT: ADMIN LOGIN ---
   const AdminLoginScreen = () => {
-    const [pin, setPin] = useState('');
-    const [error, setError] = useState(false);
+    const [pin, setPin] = useState<string>('');
+    const [error, setError] = useState<boolean>(false);
 
     const handleLogin = () => {
       if (pin === '1234') { 
@@ -651,7 +683,7 @@ export default function App() {
 
             <div className="grid grid-cols-3 gap-4 mb-8">
               {[1,2,3,4,5,6,7,8,9].map(num => (
-                <button key={num} onClick={() => {setPin(p => p.length < 4 ? p + num : p); setError(false);}} className="bg-slate-100 py-4 rounded-xl text-2xl font-bold text-slate-700 hover:bg-slate-200 transition">
+                <button key={num} onClick={() => {setPin(p => p.length < 4 ? p + num.toString() : p); setError(false);}} className="bg-slate-100 py-4 rounded-xl text-2xl font-bold text-slate-700 hover:bg-slate-200 transition">
                   {num}
                 </button>
               ))}
@@ -672,12 +704,12 @@ export default function App() {
 
   // --- COMPONENT: ADMIN DASHBOARD ---
   const AdminDashboardScreen = () => {
-    const [activeTab, setActiveTab] = useState('stok'); 
-    const [isSeeding, setIsSeeding] = useState(false);
+    const [activeTab, setActiveTab] = useState<string>('stok'); 
+    const [isSeeding, setIsSeeding] = useState<boolean>(false);
 
     const handleSeedData = async () => {
-      if(!isFirebaseConfigured) {
-         alert("Firebase belum dikonfigurasi! Harap isi API Key Anda di file App.jsx.");
+      if(!isFirebaseConfigured || !db) {
+         alert("Firebase belum dikonfigurasi! Harap isi API Key Anda di file App.tsx.");
          return;
       }
 
@@ -829,7 +861,7 @@ export default function App() {
   };
 
   // --- HELPER: HEADER ---
-  const Header = ({ title, sub, icon }) => (
+  const Header = ({ title, sub, icon }: { title: string; sub?: string; icon: React.ReactNode }) => (
     <div className="flex items-center justify-between mb-8 bg-white p-6 rounded-2xl shadow-sm border-b border-gray-100">
       <div>
         <h2 className="text-4xl font-extrabold text-green-800 flex items-center gap-4">
