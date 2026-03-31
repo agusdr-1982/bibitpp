@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sprout, User, Check, Printer, ArrowRight, ArrowLeft, AlertCircle, ShoppingCart, Trash2, Home, ShieldCheck, Trees, Mountain, Camera, X, RefreshCw, Settings, Lock, Package, FileText, LogOut, Database, AlertTriangle } from 'lucide-react';
+import { Sprout, User, Check, Printer, ArrowRight, ArrowLeft, AlertCircle, ShoppingCart, Trash2, Home, Trees, Mountain, Camera, X, RefreshCw, Settings, Lock, Package, FileText, LogOut, Database, AlertTriangle } from 'lucide-react';
 
 // --- 1. IMPORT FIREBASE ---
 import { initializeApp } from 'firebase/app';
@@ -788,7 +788,7 @@ export default function App() {
                            </thead>
                            <tbody>
                               {bibitData.length === 0 ? (
-                                <tr><td colSpan="5" className="p-8 text-center text-slate-500 font-bold">Data kosong. Jika Firebase sudah dikonfigurasi, silakan klik tombol Inisialisasi Data di atas.</td></tr>
+                                <tr><td colSpan={5} className="p-8 text-center text-slate-500 font-bold">Data kosong. Jika Firebase sudah dikonfigurasi, silakan klik tombol Inisialisasi Data di atas.</td></tr>
                               ) : (
                                 bibitData.map(bibit => (
                                    <tr key={bibit.id} className="border-b border-slate-100 hover:bg-slate-50">
